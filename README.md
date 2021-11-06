@@ -61,3 +61,7 @@ If you intend to use a "staging" workspace & branch:
 Populating these values will allow Github to automatically deploy to your AWS account(s)
 whenever code is merged/pushed to develop, staging, or main branches. You can watch
 the deployment process in the Actions tab of your repository. 
+
+### Terraform Apply
+
+Terraform apply will deploy all necessary infrastructure for this and will output the endpoint your bot needs. When the endpoint receives a POST from a Slack Slash Command, it will respond by sending a POST request to the slack-url you specify in terraform.tfvars. 

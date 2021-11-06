@@ -20,12 +20,6 @@ resource "aws_ssm_parameter" "insults-table" {
   value = var.insults-store
 }
 
-resource "aws_ssm_parameter" "insults-url" {
-  name  = "insults-lambda-url"
-  type  = "string"
-  value = var.insults-url
-}
-
 # Holds our iterator and our messages list.
 
 data "aws_dynamodb_table" "insults-store" {

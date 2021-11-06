@@ -32,6 +32,8 @@ if "Parameter" not in param or "Value" not in param["Parameter"]:
 
 table = param["Parameter"]["Value"]
 
+# TODO this should fetch (and create) a map of Slack URLs so we can support multiple
+# webhooks/character quotations.
 
 def get_slack_url():
     return get_value('S', "insults#slack")
@@ -51,9 +53,13 @@ def get_value(key_type, key_value):
         return i["Item"]["v"][key_type]
     return None
 
+# TODO - insults#character#messages#%s - allow us to get a message for a specific character.
+
 
 def get_message(index):
     return get_value("S", "insults#messages#%s" % index)
+
+# TODO - figure out how to iterate ALL messages or just messages for each character.
 
 
 iterator_key = "insults#iterator"
@@ -75,6 +81,7 @@ def get_iterator():
         print("Need to create the iterator, it disappeared.")
         return 1
 
+# TODO - implement multiple iterators as above - this will need to target specific iterators.
 
 def reset_iterator():
     dynamodb.update_item(
@@ -92,6 +99,7 @@ def reset_iterator():
         }
     )
 
+# TODO - implement multiple iterators as above - this will need to target specific iterators.
 
 def increment_iterator():
     dynamodb.update_item(
@@ -109,6 +117,7 @@ def increment_iterator():
         }
     )
 
+# TODO - implement multiple iterators as above - this will need to target specific iterators.
 
 def put_message(key, message):
     response = dynamodb.put_item(
@@ -124,6 +133,7 @@ def put_message(key, message):
     )
     return response
 
+# TODO - fetch lines for a given character or loop through all files, creating quotes for all characters.
 
 def create_messages():
     messages = []
@@ -141,6 +151,9 @@ def create_messages():
     # Tells us how many messages exist, so we know when to reset the loop.
     put_message("insults#count", i)
 
+# TODO - look for a parameter which matches a character name (see the map, at top of file).
+# TODO - if present, pick a quote from that character. Otherwise, pick a character at random
+# TODO - and trigger the next message for that one. 
 
 def handle(event, context):
     body = dict(urlparse.parse_qsl(base64.b64decode(str(event['body'])).decode('ascii')))

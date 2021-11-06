@@ -1,17 +1,3 @@
-terraform {
-  backend "remote" {
-    organization = var.organization
-    workspaces {
-      prefix = var.workspace
-    }
-  }
-  required_providers {
-    aws    = ">= 2.67"
-    random = ">= 2"
-  }
-  required_version = ">= 1.0.3"
-}
-
 provider "aws" {
   region  = "us-east-1"
   profile = terraform.workspace
@@ -26,27 +12,25 @@ provider "aws" {
 }
 
 # Holds our iterator, our Slack URL, and our messages list.
+# Because I use this as a shared table for key-value config store,
 
-resource "aws_dynamodb_table" "global-store" {
-  provider = aws.secondary
-  hash_key = "k"
-  name     = "GlobalStore"
-  attribute {
-    name = "k"
-    type = "S"
-  }
-  ttl {
-    attribute_name = "ExpiresAt"
-    enabled = true
-  }
-  tags = {
-    CostCenter = "zbmowrey-global"
-  }
-  billing_mode = "PAY_PER_REQUEST"
+resource "aws_ssm_parameter" "gilfoyle-table" {
+  name  = "gilfoyle-table"
+  type  = "string"
+  value = var.dynamo_table_name
+}
+
+resource "aws_ssm_parameter" "gilfoyle-url" {
+  name  = "gilfoyle-url"
+  type  = "string"
+  value = var.gilfoyle_url
+}
+
+data "aws_dynamodb_table" "gilfoyle-store" {
+  name = aws_ssm_parameter.gilfoyle-table.value
 }
 
 resource "aws_cloudwatch_log_group" "gilfoyle" {
-  provider = aws.secondary
   name = "${var.app-name}-${terraform.workspace}-gilfoyle-logs"
 }
 
@@ -81,7 +65,7 @@ module "gilfoyle-lambda" {
          "dynamodb:Query",
          "dynamodb:UpdateItem"
       ],
-      resources = [aws_dynamodb_table.global-store.arn]
+      resources = [data.aws_dynamodb_table.gilfoyle-store.arn]
     }
   }
 }
@@ -98,6 +82,8 @@ module "gilfoyle-api" {
     allow_methods = ["*"]
     allow_origins = ["*"]
   }
+
+  create_api_domain_name = false
 
   # Access logs
   default_stage_access_log_destination_arn = aws_cloudwatch_log_group.gilfoyle.arn

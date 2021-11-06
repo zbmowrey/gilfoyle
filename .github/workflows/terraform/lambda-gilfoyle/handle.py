@@ -1,9 +1,10 @@
 import base64
 import boto3
 from botocore.config import Config
-from urllib import parse as urlparse
-import requests
 import json
+import random
+import requests
+from urllib import parse as urlparse
 
 boto_config = Config(
     region_name='us-east-1',
@@ -93,6 +94,33 @@ def increment_iterator():
     )
 
 
+def put_message(key, message):
+    response = dynamodb.put_item(
+        TableName=table,
+        Item={
+            'k': {
+                'S': key
+            },
+            'v': {
+                'S': message
+            }
+        }
+    )
+    return response
+
+
+def create_messages():
+    messages = []
+    with open("lines.txt") as file:
+        for line in file:
+            line = line.strip()
+            messages.append(line)
+    random.shuffle(messages)
+    for key, message in enumerate(messages):
+        dynamo_key = "gilfoyle#messages#%s" % key
+        put_message(dynamo_key, message)
+
+
 def handle(event, context):
     body = dict(urlparse.parse_qsl(base64.b64decode(str(event['body'])).decode('ascii')))
 
@@ -103,6 +131,10 @@ def handle(event, context):
     channel = "#%s" % body["channel_name"]
 
     i = get_iterator()
+
+    # Ensure that messages are always in place. Shuffle to keep things interesting.
+    if i < 1:
+        create_messages()
 
     if i > 39:
         reset_iterator()

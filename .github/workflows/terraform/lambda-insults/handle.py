@@ -17,8 +17,6 @@ boto_config = Config(
     }
 )
 
-# TODO - insults#slack by default.
-
 dynamodb = boto3.client('dynamodb', config=boto_config)
 ssm = boto3.client('ssm', config=boto_config)
 
@@ -34,9 +32,9 @@ if "Parameter" not in param or "Value" not in param["Parameter"]:
 
 table = param["Parameter"]["Value"]
 
-
-# TODO this should fetch (and create) a map of Slack URLs so we can support multiple
-# webhooks/character quotations.
+# NOTE: Do not change the insults#slack key unless you've already changed it
+# in aws_dynamodb_table_item in main.tf. TF won't recreate or update the item
+# if it already exists. 
 
 def get_slack_url():
     return get_value('S', "insults#slack", 'S')

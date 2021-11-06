@@ -27,6 +27,18 @@ data "aws_dynamodb_table" "insults-store" {
   name = var.insults-store
 }
 
+resource "aws_dynamodb_table_item" "insults-slack-url" {
+    table_name = data.aws_dynamodb_table.insults-store.name
+    hash_key = "k"
+
+    item = <<EOF
+{
+    "k": { "S": "insults#slack" },
+    "v": { "S": "${var.insults-url}" }
+}
+EOF
+}
+
 resource "aws_cloudwatch_log_group" "insults" {
   name = "${var.app-name}-${terraform.workspace}-logs"
 }
@@ -40,30 +52,30 @@ resource "aws_lambda_permission" "insults" {
 }
 
 module "insults-lambda" {
-  source        = "terraform-aws-modules/lambda/aws"
-  function_name = "${var.app-name}-${terraform.workspace}"
-  description   = "Responds to Slash Commands with an Insult."
-  handler       = "handle.handle"
-  runtime       = "python3.8"
-  publish       = false
-  source_path   = "lambda-insults/"
-  environment_variables = {
+  source                   = "terraform-aws-modules/lambda/aws"
+  function_name            = "${var.app-name}-${terraform.workspace}"
+  description              = "Responds to Slash Commands with an Insult."
+  handler                  = "handle.handle"
+  runtime                  = "python3.8"
+  publish                  = false
+  source_path              = "lambda-insults/"
+  environment_variables    = {
     Serverless = "Terraform"
   }
   attach_policy_statements = true
-  policy_statements = {
+  policy_statements        = {
     dynamodb = {
       effect    = "Allow",
       actions   = [
-         "dynamodb:GetItem",
-         "dynamodb:Query",
-         "dynamodb:UpdateItem"
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:UpdateItem"
       ],
       resources = [data.aws_dynamodb_table.insults-store.arn]
     }
   }
-  attach_policy_json = true
-  policy_json        = <<EOF
+  attach_policy_json       = true
+  policy_json              = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -87,7 +99,9 @@ module "insults-api" {
   protocol_type = "HTTP"
 
   cors_configuration = {
-    allow_headers = ["content-type", "x-amz-date", "authorization", "x-api-key", "x-amz-security-token", "x-amz-user-agent"]
+    allow_headers = [
+      "content-type", "x-amz-date", "authorization", "x-api-key", "x-amz-security-token", "x-amz-user-agent"
+    ]
     allow_methods = ["*"]
     allow_origins = ["*"]
   }

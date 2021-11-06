@@ -158,15 +158,13 @@ def create_messages():
 # TODO - and trigger the next message for that one.
 
 def handle(event, context):
-    # body = dict(urlparse.parse_qsl(base64.b64decode(str(event['body'])).decode('ascii')))
+    body = dict(urlparse.parse_qsl(base64.b64decode(str(event['body'])).decode('ascii')))
 
     webhook_url = get_slack_url()
     if webhook_url is None:
         raise Exception("Missing Slack URL")
 
-    # channel = "#%s" % body["channel_name"]
-
-    channel = "#zach-test"
+    channel = "#%s" % body["channel_name"]
 
     i = get_iterator()
 

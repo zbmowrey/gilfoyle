@@ -62,6 +62,21 @@ module "insults-lambda" {
       resources = [data.aws_dynamodb_table.insults-store.arn]
     }
   }
+  attach_policy_json = true
+  policy_json        = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ssm:GetParameter"
+            ],
+            "Resource": ["${aws_ssm_parameter.insults-table.arn}"]
+        }
+    ]
+}
+EOF
 }
 
 module "insults-api" {

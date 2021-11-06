@@ -9,6 +9,20 @@ Rename .github/workflows/terraform/backend.tf.example (drop .example from the na
 
 Then configure the backend in that file to your liking. 
 
+### Terraform Vars File
+
+Rename .github/workflows/terraform/terraform.tfvars.example (drop .example from the name). 
+
+Edit this file to provide values for the following: 
+
+    organization - the Terraform Cloud organization you'll be using for local testing. 
+    workspace - the workspace PREFIX you'll use. I append the Environment string to the end of this to name the workspace.
+    owner - the person responsible for managing the app in your infrastructure. 
+    cost-center - a string to help you find this app's costs in billing reports. 
+    app-name - a name for the application. This will affect most resource naming. 
+    insults-store - the name of the dynamodb table we'll create. 
+    insults-url - a https:// webhook pointing to Slack that allows the bot to post messages. 
+
 ### Workspace(s)
 
 The full production workflow of this app makes use of **main**, **develop**,

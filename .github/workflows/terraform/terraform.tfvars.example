@@ -1,7 +1,14 @@
+# TF Cloud Organization Name
 organization = ""
+# TF Cloud Workspace PREFIX
 workspace = ""
+# A string to tell you who owns this app.
 owner = ""
+# A string to help you monitor costs.
 cost-center = ""
+# A string to name the app.
 app-name = ""
+# A string that will be your dynamo-db table name.
 insults-store = ""
+# A Slack Webhook URL which lets you post messages.
 insults-url = ""

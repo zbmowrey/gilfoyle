@@ -3,58 +3,60 @@ provider "aws" {
   profile = terraform.workspace
   default_tags {
     tags = {
-      CostCenter  = var.cost-center
       Owner       = var.owner
+      CostCenter  = var.cost-center
       Environment = terraform.workspace
       Terraform   = true
     }
   }
 }
 
-# Holds our iterator, our Slack URL, and our messages list.
-# Because I use this as a shared table for key-value config store,
+# If we change these parameter names, we also need to update lambda-insults/handle.py
+# so it can find the new parameters.
 
-resource "aws_ssm_parameter" "gilfoyle-table" {
-  name  = "gilfoyle-table"
+resource "aws_ssm_parameter" "insults-table" {
+  name  = "insults-lambda-table"
   type  = "string"
-  value = var.dynamo_table_name
+  value = var.insults-store
 }
 
-resource "aws_ssm_parameter" "gilfoyle-url" {
-  name  = "gilfoyle-url"
+resource "aws_ssm_parameter" "insults-url" {
+  name  = "insults-lambda-url"
   type  = "string"
-  value = var.gilfoyle_url
+  value = var.insults-url
 }
 
-data "aws_dynamodb_table" "gilfoyle-store" {
-  name = aws_ssm_parameter.gilfoyle-table.value
+# Holds our iterator and our messages list.
+
+data "aws_dynamodb_table" "insults-store" {
+  name = aws_ssm_parameter.insults-table.value
 }
 
-resource "aws_cloudwatch_log_group" "gilfoyle" {
-  name = "${var.app-name}-${terraform.workspace}-gilfoyle-logs"
+resource "aws_cloudwatch_log_group" "insults" {
+  name = "${var.app-name}-${terraform.workspace}-insults-logs"
 }
 
-resource "aws_lambda_permission" "gilfoyle" {
-  statement_id  = "AllowGilfoyleLambdaInvoke"
+resource "aws_lambda_permission" "insults" {
+  statement_id  = "AllowinsultsLambdaInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = module.gilfoyle-lambda.lambda_function_name
+  function_name = module.insults-lambda.lambda_function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${module.gilfoyle-api.apigatewayv2_api_execution_arn}/*/*/*"
+  source_arn    = "${module.insults-api.apigatewayv2_api_execution_arn}/*/*/*"
 }
 
-module "gilfoyle-lambda" {
+module "insults-lambda" {
   source        = "terraform-aws-modules/lambda/aws"
-  function_name = "${var.app-name}-${terraform.workspace}-gilfoyle"
+  function_name = "${var.app-name}-${terraform.workspace}-insults"
   description   = "Provides a webhook for Slack user impersonation."
   handler       = "handle.handle"
   runtime       = "python3.8"
   publish       = false
-  source_path   = "lambda-gilfoyle/"
+  source_path   = "lambda-insults/"
   environment_variables = {
     Serverless = "Terraform"
   }
   tags = {
-    CostCenter = "lambda-gilfoyle"
+    CostCenter = "lambda-insults"
   }
   attach_policy_statements = true
   policy_statements = {
@@ -65,16 +67,16 @@ module "gilfoyle-lambda" {
          "dynamodb:Query",
          "dynamodb:UpdateItem"
       ],
-      resources = [data.aws_dynamodb_table.gilfoyle-store.arn]
+      resources = [data.aws_dynamodb_table.insults-store.arn]
     }
   }
 }
 
-module "gilfoyle-api" {
+module "insults-api" {
   source = "terraform-aws-modules/apigateway-v2/aws"
 
   name          = "${var.app-name}-${terraform.workspace}"
-  description   = "API Gateway for Gilfoyle Slack Bot"
+  description   = "API Gateway for insults Slack Bot"
   protocol_type = "HTTP"
 
   cors_configuration = {
@@ -86,19 +88,19 @@ module "gilfoyle-api" {
   create_api_domain_name = false
 
   # Access logs
-  default_stage_access_log_destination_arn = aws_cloudwatch_log_group.gilfoyle.arn
+  default_stage_access_log_destination_arn = aws_cloudwatch_log_group.insults.arn
   default_stage_access_log_format          = "$context.identity.sourceIp - - [$context.requestTime] \"$context.httpMethod $context.routeKey $context.protocol\" $context.status $context.responseLength $context.requestId $context.integrationErrorMessage"
 
   # Routes and integrations
   integrations = {
     "POST /" = {
-      lambda_arn             = module.gilfoyle-lambda.lambda_function_arn
+      lambda_arn             = module.insults-lambda.lambda_function_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
     }
 
     "$default" = {
-      lambda_arn = module.gilfoyle-lambda.lambda_function_arn
+      lambda_arn = module.insults-lambda.lambda_function_arn
     }
   }
   tags = {

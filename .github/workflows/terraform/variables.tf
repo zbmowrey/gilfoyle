@@ -6,21 +6,22 @@ variable "workspace" {
 }
 variable "cost-center" {
   type=string
-  default="gilfoyle"
+  default="insults-bot"
 }
 variable "owner" {
   type=string
-  default="gilfoyle"
+  default="insults-bot"
 }
 variable "app-name" {
   type=string
-  default="gilfoyle"
+  default="insults-bot"
 }
 # Name of the DynamoDB Table we're going to use.
-variable "gilfoyle-store" {
+variable "insults-store" {
   type=string
+  default="insults-bot"
 }
 # The Slack URL we're going to hit.
-variable "gilfoyle-url" {
+variable "insults-url" {
   type=string
 }

@@ -6,6 +6,8 @@ import random
 import requests
 from urllib import parse as urlparse
 
+# Configure Boto3 clients for Dynamo and SSM Parameter Store
+
 boto_config = Config(
     region_name='us-east-1',
     signature_version='v4',
@@ -16,12 +18,23 @@ boto_config = Config(
 )
 
 dynamodb = boto3.client('dynamodb', config=boto_config)
-table = "GlobalStore"
-iterator_key = "gilfoyle#iterator"
+ssm = boto3.client('ssm', config=boto_config)
+
+table_key = 'insults-lambda-table'
+
+param = ssm.get_parameter(
+    Name=table_key,
+    WithDecryption=False
+)
+
+if "Parameter" not in param or "Value" not in param["Parameter"]:
+    raise "Missing the %s parameter" % table_key
+
+table = param["Parameter"]["Value"]
 
 
 def get_slack_url():
-    return get_value('S', "gilfoyle#slack")
+    return get_value('S', "insults#slack")
 
 
 def get_value(key_type, key_value):
@@ -40,7 +53,10 @@ def get_value(key_type, key_value):
 
 
 def get_message(index):
-    return get_value("S", "gilfoyle#messages#%s" % index)
+    return get_value("S", "insults#messages#%s" % index)
+
+
+iterator_key = "insults#iterator"
 
 
 def get_iterator():
@@ -116,9 +132,14 @@ def create_messages():
             line = line.strip()
             messages.append(line)
     random.shuffle(messages)
+    i = 0
     for key, message in enumerate(messages):
-        dynamo_key = "gilfoyle#messages#%s" % key
+        i += 1
+        dynamo_key = "insults#messages#%s" % key
         put_message(dynamo_key, message)
+
+    # Tells us how many messages exist, so we know when to reset the loop.
+    put_message("insults#count", i)
 
 
 def handle(event, context):
@@ -131,12 +152,14 @@ def handle(event, context):
     channel = "#%s" % body["channel_name"]
 
     i = get_iterator()
+    m = get_value('S', "insults#count")
 
     # Ensure that messages are always in place. Shuffle to keep things interesting.
     if i < 1:
         create_messages()
 
-    if i > 39:
+    # Reset the loop.
+    if i > m-1:
         reset_iterator()
     else:
         increment_iterator()

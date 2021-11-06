@@ -34,7 +34,7 @@ table = param["Parameter"]["Value"]
 
 # NOTE: Do not change the insults#slack key unless you've already changed it
 # in aws_dynamodb_table_item in main.tf. TF won't recreate or update the item
-# if it already exists. 
+# if it already exists.
 
 def get_slack_url():
     return get_value('S', "insults#slack", 'S')

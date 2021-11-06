@@ -3,16 +3,14 @@ on:
     paths:
       - '**terraform/**'
     branches:
-      - temporarily_suppress_deployment
-#      - develop
-#      - staging
-#      - main
+      - develop
+      - staging
+      - main
   push:
     branches:
-      - temporarily_suppress_deployment
-#      - develop
-#      - staging
-#      - main
+      - develop
+      - staging
+      - main
 jobs:
   terraform_plan:
     timeout-minutes: 30

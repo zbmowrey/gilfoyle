@@ -1,6 +1,25 @@
 # Insult-Bot
 A Slack Bot which responds to Slash Commands with one of many possible insults. 
 
+## The Future
+
+This bot started life as a tribute to Bertram Gilfoyle from a very popular show on a very popular network. 
+While that purpose continues, we intend to extend it to provide for a variety of characters and quotations, 
+on both random or filtered bases. 
+
+Future usage will be something like: 
+    /insult (no additional input)
+    ... triggers us to pick a character at random, then move to that character's pointer and return a response.
+
+    /insult gilfoyle
+    ... the same as above, without the randomness.
+    
+The intent is that we'll perform a partial match and take the first result, then jump to that character's pointer
+in the current quotation queue, returning one of their quotations.
+
+I'm not sure yet how we can successfully handle a case where multiple characters match aside from the above. 
+Suggestions are definitely welcomed. 
+
 ## Setup
 
 ### Backend

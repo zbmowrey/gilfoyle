@@ -207,6 +207,3 @@ def handle(event, context):
         },
         "body": ""
     }
-
-
-handle("foo", "foo")

@@ -5,6 +5,7 @@ provider "aws" {
     tags = {
       Owner       = var.owner
       CostCenter  = var.cost-center
+      Application = var.app-name
       Environment = terraform.workspace
       Terraform   = true
     }
@@ -16,22 +17,22 @@ provider "aws" {
 
 resource "aws_ssm_parameter" "insults-table" {
   name  = "insults-lambda-table"
-  type  = "string"
+  type  = "String"
   value = var.insults-store
 }
 
 # Holds our iterator and our messages list.
 
 data "aws_dynamodb_table" "insults-store" {
-  name = aws_ssm_parameter.insults-table.value
+  name = var.insults-store
 }
 
 resource "aws_cloudwatch_log_group" "insults" {
-  name = "${var.app-name}-${terraform.workspace}-insults-logs"
+  name = "${var.app-name}-${terraform.workspace}-logs"
 }
 
 resource "aws_lambda_permission" "insults" {
-  statement_id  = "AllowinsultsLambdaInvoke"
+  statement_id  = "AllowInsultsBotLambdaInvoke"
   action        = "lambda:InvokeFunction"
   function_name = module.insults-lambda.lambda_function_name
   principal     = "apigateway.amazonaws.com"
@@ -40,17 +41,14 @@ resource "aws_lambda_permission" "insults" {
 
 module "insults-lambda" {
   source        = "terraform-aws-modules/lambda/aws"
-  function_name = "${var.app-name}-${terraform.workspace}-insults"
-  description   = "Provides a webhook for Slack user impersonation."
+  function_name = "${var.app-name}-${terraform.workspace}"
+  description   = "Responds to Slash Commands with an Insult."
   handler       = "handle.handle"
   runtime       = "python3.8"
   publish       = false
   source_path   = "lambda-insults/"
   environment_variables = {
     Serverless = "Terraform"
-  }
-  tags = {
-    CostCenter = "lambda-insults"
   }
   attach_policy_statements = true
   policy_statements = {
@@ -96,9 +94,5 @@ module "insults-api" {
     "$default" = {
       lambda_arn = module.insults-lambda.lambda_function_arn
     }
-  }
-  tags = {
-    Module = "lambda-web-mail"
-    Name = "web-mail-api"
   }
 }

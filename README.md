@@ -8,6 +8,7 @@ While that purpose continues, we intend to extend it to provide for a variety of
 on both random or filtered bases. 
 
 Future usage will be something like: 
+
     /insult (no additional input)
     ... triggers us to pick a character at random, then move to that character's pointer and return a response.
 

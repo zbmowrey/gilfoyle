@@ -34,7 +34,7 @@ My convention has been to use **workspace names** that identically match the
 automatically point to the correct AWS account, and to tag/name resources with
 the appropriate environment name. 
 
-Run 'terraform workspace new develop' and then terraform init. Then go into Terraform 
+Run `terraform workspace new develop` and then `terraform init`. Then go into Terraform 
 Cloud and **update the settings on your workspace**. You want to run deployments 
 LOCALLY rather than remote. We do this because TF Cloud isn't aware of the workspace name. 
 

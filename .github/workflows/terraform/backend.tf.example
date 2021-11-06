@@ -1,5 +1,5 @@
 
-# You can freely change this - the file is gitignored. 
+# Remove .example from this file name and configure for your own backend. 
 
 terraform {
   backend "remote" {
@@ -14,5 +14,3 @@ terraform {
   }
   required_version = ">= 1.0.3"
 }
-
-# foo

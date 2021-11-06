@@ -3,6 +3,12 @@ A Slack Bot which responds to Slash Commands with one of many possible insults.
 
 ## Setup
 
+### Backend
+
+Rename .github/workflows/terraform/backend.tf.example (drop .example from the name). 
+
+Then configure the backend in that file to your liking. 
+
 ### Workspace(s)
 
 The full production workflow of this app makes use of **main**, **develop**,

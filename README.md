@@ -60,16 +60,12 @@ LOCALLY rather than remote. We do this because TF Cloud isn't aware of the works
 
 ### AWS Creds
 
-Add the following to your ~/.aws/credentials file:
+I recommend that you do not rely on long-lived key/secret pairs for authentication. Github
+supports OpenID Connect, as does AWS. You can find an example TF configuration 
+[here](https://github.com/zbmowrey/cloud-admin/blob/main/deployment-to-develop.tf).
 
-    [develop]
-    aws_access_key_id=
-    aws_secret_access_key=
-
-Be sure to populate the expected values for each. Note that you can certainly
-create a new profile name, new branch, and new workspace to match, and the
-code will happily deploy when you manually use the terraform commands... but 
-the Github action won't, because it's tied to the specific branches in question. 
+Combining the above with SSO & MFA on your aws-cli will allow you to remove access keys
+from all IAM users and improve your account security. 
 
 ### Github Secrets
 
@@ -77,20 +73,8 @@ Create this secret and populate it with your tf cloud token:
 
     TERRAFORM_CLOUD_TOKEN
 
-If you intend to use a "main" workspace & branch: 
-
-    AWS_KEY_MAIN
-    AWS_SECRET_MAIN
-
-If you intend to use a "develop" workspace & branch:
-
-    AWS_KEY_DEVELOP
-    AWS_SECRET_DEVELOP
-
-If you intend to use a "staging" workspace & branch:
-
-    AWS_KEY_STAGING
-    AWS_SECRET_STAGING
+Provide AWS_DEVELOP_ACCOUNT, AWS_STAGING_ACCOUNT, and AWS_MAIN_ACCOUNT ids (numerical)
+for each of the environments you intend to use.
 
 Populating these values will allow Github to automatically deploy to your AWS account(s)
 whenever code is merged/pushed to develop, staging, or main branches. You can watch

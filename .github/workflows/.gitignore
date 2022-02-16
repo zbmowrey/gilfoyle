@@ -1,4 +1,0 @@
-.terraform/
-builds/
-terraform/terraform.tfvars
-terraform/backend.tf

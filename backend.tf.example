@@ -3,9 +3,9 @@
 
 terraform {
   backend "remote" {
-    organization = "zbmowrey-aws"
+    organization = ""
     workspaces {
-      prefix = "zbmowrey-com-gilfoyle-"
+      prefix = ""
     }
   }
   required_providers {

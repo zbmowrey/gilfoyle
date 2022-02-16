@@ -12,23 +12,32 @@ provider "aws" {
   }
 }
 
+locals {
+  insults-store = "insults-store-${terraform.workspace}"
+}
+
 # If we change these parameter names, we also need to update lambda-insults/handle.py
 # so it can find the new parameters.
 
 resource "aws_ssm_parameter" "insults-table" {
   name  = "insults-lambda-table"
   type  = "String"
-  value = var.insults-store
+  value = local.insults-store
+}
+
+resource "aws_dynamodb_table" "insults-store" {
+  hash_key = "k"
+  name     = local.insults-store
+  attribute {
+    name = "k"
+    type = "S"
+  }
+  billing_mode = "PAY_PER_REQUEST"
 }
 
 # Holds our iterator and our messages list.
-
-data "aws_dynamodb_table" "insults-store" {
-  name = var.insults-store
-}
-
 resource "aws_dynamodb_table_item" "insults-slack-url" {
-    table_name = data.aws_dynamodb_table.insults-store.name
+    table_name = aws_dynamodb_table.insults-store.name
     hash_key = "k"
 
     item = <<EOF
@@ -46,13 +55,13 @@ resource "aws_cloudwatch_log_group" "insults" {
 resource "aws_lambda_permission" "insults" {
   statement_id  = "AllowInsultsBotLambdaInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = module.insults-lambda.lambda_function_name
+  function_name = module.insults-lambda.lambda_function_arn
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${module.insults-api.apigatewayv2_api_execution_arn}/*/*/*"
+  source_arn    = "${module.insults-api.apigatewayv2_api_arn}/*/*/"
 }
 
 module "insults-lambda" {
-  source                   = "terraform-aws-modules/lambda/aws"
+  source                   = "registry.terraform.io/terraform-aws-modules/lambda/aws"
   function_name            = "${var.app-name}-${terraform.workspace}"
   description              = "Responds to Slash Commands with an Insult."
   handler                  = "handle.handle"
@@ -69,9 +78,10 @@ module "insults-lambda" {
       actions   = [
         "dynamodb:GetItem",
         "dynamodb:Query",
-        "dynamodb:UpdateItem"
+        "dynamodb:UpdateItem",
+        "dynamodb:PutItem"
       ],
-      resources = [data.aws_dynamodb_table.insults-store.arn]
+      resources = [aws_dynamodb_table.insults-store.arn]
     }
   }
   attach_policy_json       = true
@@ -92,7 +102,7 @@ EOF
 }
 
 module "insults-api" {
-  source = "terraform-aws-modules/apigateway-v2/aws"
+  source = "registry.terraform.io/terraform-aws-modules/apigateway-v2/aws"
 
   name          = "${var.app-name}-${terraform.workspace}"
   description   = "API Gateway for insults Slack Bot"
